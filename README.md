@@ -27,7 +27,7 @@ This project provides a functional scheduling api and a quotation api for a comp
    ```bash
    git clone https://github.com/kaygrammer/noemdekAssessment.git
 
-   git checkout to master branch
+   git checkout to main branch
    
 2. Navigate to the project directory
    cd src
