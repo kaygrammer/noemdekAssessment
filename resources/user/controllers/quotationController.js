@@ -1,5 +1,5 @@
 import QuotationService from "../services/quotationService.js";
-import { createQuotationSchema } from "../../../utils/validation/validation.js";
+import { createQuotationSchema, validateMongoDbId } from "../../../utils/validation/validation.js";
 import { NoQuotationsFoundError } from "../../../utils/errors/error-handler.js";
 
 class QuotationController {
@@ -48,6 +48,7 @@ class QuotationController {
   async getQuotationById(req, res) {
     try {
       const { id } = req.params;
+      validateMongoDbId(id)
       const quotation = await QuotationService.getQuotationById(id);
       if (!quotation) {
         throw new NoQuotationsFoundError("Quotation not found");
@@ -56,6 +57,9 @@ class QuotationController {
     } catch (error) {
       if (error instanceof NoQuotationsFoundError) {
         return res.status(404).json({ status: false, message: error.message });
+      }
+      if(error.message === "this id is not valid or not found"){
+        return res.status(404).json({ status: false, message: error.message }); 
       }
       return res.status(500).json({ error: "Internal Server Error" });
     }
@@ -108,6 +112,7 @@ class QuotationController {
     try {
       const { id } = req.params;
       const quotationData = req.body;
+      validateMongoDbId(id)
       // Exclude rfqNumber from quotationData
       const { rfqNumber: excludedRfqNumber, ...updateData } = quotationData;
       const quotation = await QuotationService.updateQuotation(id, updateData);
@@ -117,6 +122,9 @@ class QuotationController {
         quotation,
       });
     } catch (error) {
+      if(error.message === "this id is not valid or not found"){
+        return res.status(404).json({ status: false, message: error.message }); 
+      }
       return res.status(500).json({ error: "Internal Server Error" });
     }
   }
@@ -124,11 +132,15 @@ class QuotationController {
   async deleteQuotation(req, res) {
     try {
       const { id } = req.params;
+      validateMongoDbId(id)
       await QuotationService.deleteQuotation(id);
       return res
         .status(200)
         .json({ status: true, message: "Quotation deleted successfully" });
     } catch (error) {
+      if(error.message === "this id is not valid or not found"){
+        return res.status(404).json({ status: false, message: error.message }); 
+      }
       return res.status(500).json({ error: "Internal Server Error" });
     }
   }
