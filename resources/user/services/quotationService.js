@@ -3,6 +3,12 @@ import { NoQuotationsFoundError } from "../../../utils/errors/error-handler.js";
 
 class QuotationService {
   static async createQuotation(quotationData) {
+    const { rfqNumber } = quotationData;
+    const existingQuotation = await Quotation.findOne({ rfqNumber });
+
+    if (existingQuotation) {
+      throw new Error("Quotation with the same RFQ number already exists.");
+    }
     const quotation = new Quotation(quotationData);
     return quotation.save();
   }
@@ -14,11 +20,18 @@ class QuotationService {
 
   static async updateQuotationByRfqNumber(rfqNumber, quotationData) {
     try {
-        const existingQuotation = await Quotation.findOne({ rfqNumber });
-    if (!existingQuotation) {
-      throw new Error("Quotation not found");
-    }
-      const quotation = await Quotation.findOneAndUpdate({ rfqNumber }, quotationData, { new: true });
+      const existingQuotation = await Quotation.findOne({ rfqNumber });
+      if (!existingQuotation) {
+        throw new Error("Quotation not found");
+      }
+      // Exclude rfqNumber from quotationData
+      const { rfqNumber: excludedRfqNumber, ...updateData } = quotationData;
+
+      const quotation = await Quotation.findOneAndUpdate(
+        { rfqNumber },
+        updateData,
+        { new: true }
+      );
       return quotation;
     } catch (error) {
       throw error;
@@ -30,15 +43,22 @@ class QuotationService {
     return quotation;
   }
 
-  static async getQuotationById(rfqNumber) {
-    const quotation = await Quotation.findOne({rfqNumber});
+  static async getQuotationByRfq(rfqNumber) {
+    const quotation = await Quotation.findOne({ rfqNumber });
     return quotation;
   }
 
-
   static async updateQuotation(id, quotationData) {
-    const quotation = await Quotation.findByIdAndUpdate(id, quotationData, { new: true });
-    return quotation;
+    try {
+      const quotation = await Quotation.findByIdAndUpdate(
+        id,
+        { $set: quotationData },
+        { new: true }
+      );
+      return quotation;
+    } catch (error) {
+      throw error;
+    }
   }
 
   static async deleteQuotation(id) {

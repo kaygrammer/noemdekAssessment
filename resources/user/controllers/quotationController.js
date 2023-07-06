@@ -12,9 +12,21 @@ class QuotationController {
 
       const quotationData = req.body;
       const quotation = await QuotationService.createQuotation(quotationData);
-      return res.status(201).json({ status: true, message: "Quotation created successfully", quotation });
+      return res
+        .status(201)
+        .json({
+          status: true,
+          message: "Quotation created successfully",
+          quotation,
+        });
     } catch (error) {
-      return res.status(500).json({ error: "Internal Server Error" });
+      if (
+        error.message === "Quotation with the same RFQ number already exists."
+      ) {
+        return res.status(409).json({status:"false", error: error.message });
+      }else{
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
     }
   }
 
@@ -52,7 +64,9 @@ class QuotationController {
   async getQuotationByRfqNumber(req, res) {
     try {
       const { rfqNumber } = req.params;
-      const quotation = await QuotationService.getQuotationByRfqNumber(rfqNumber);
+      const quotation = await QuotationService.getQuotationByRfq(
+        rfqNumber
+      );
       if (!quotation) {
         throw new NoQuotationsFoundError("Quotation not found");
       }
@@ -69,11 +83,22 @@ class QuotationController {
     try {
       const { rfqNumber } = req.params;
       const quotationData = req.body;
-      const quotation = await QuotationService.updateQuotationByRfqNumber(rfqNumber, quotationData);
+      // Exclude rfqNumber from quotationData
+      const { rfqNumber: excludedRfqNumber, ...updateData } = quotationData;
+      const quotation = await QuotationService.updateQuotationByRfqNumber(
+        rfqNumber,
+        updateData
+      );
       if (!quotation) {
-        return res.status(404).json({ status: false, message: "Quotation not found" });
+        return res
+          .status(404)
+          .json({ status: false, message: "Quotation not found" });
       }
-      return res.status(200).json({ status: true, message: "Quotation updated successfully", quotation });
+      return res.status(200).json({
+        status: true,
+        message: "Quotation updated successfully",
+        quotation,
+      });
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -83,8 +108,14 @@ class QuotationController {
     try {
       const { id } = req.params;
       const quotationData = req.body;
-      const quotation = await QuotationService.updateQuotation(id, quotationData);
-      return res.status(200).json({ status: true, message: "Quotation updated successfully", quotation });
+      // Exclude rfqNumber from quotationData
+      const { rfqNumber: excludedRfqNumber, ...updateData } = quotationData;
+      const quotation = await QuotationService.updateQuotation(id, updateData);
+      return res.status(200).json({
+        status: true,
+        message: "Quotation updated successfully",
+        quotation,
+      });
     } catch (error) {
       return res.status(500).json({ error: "Internal Server Error" });
     }
@@ -94,7 +125,9 @@ class QuotationController {
     try {
       const { id } = req.params;
       await QuotationService.deleteQuotation(id);
-      return res.status(200).json({ status: true, message: "Quotation deleted successfully" });
+      return res
+        .status(200)
+        .json({ status: true, message: "Quotation deleted successfully" });
     } catch (error) {
       return res.status(500).json({ error: "Internal Server Error" });
     }
