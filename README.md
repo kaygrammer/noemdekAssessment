@@ -59,3 +59,6 @@ Contributions are welcome! If you'd like to contribute to this project, please f
 
 ##  License
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+## POSTMAN DOCUMENTATION
+https://documenter.getpostman.com/view/15577989/2s93zFXf6G
